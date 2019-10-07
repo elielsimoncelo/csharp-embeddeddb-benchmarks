@@ -66,6 +66,9 @@
     <Reference Include="ZeroFormatter">
       <HintPath>..\packages\ZeroFormatter.1.6.4\lib\net45\ZeroFormatter.dll</HintPath>
     </Reference>
+    <Reference Include="UpscaleDb-dotnet">
+      <HintPath>..\packages\UpscaleDb-DotNet.2.2.0\lib\net40\UpscaleDb-dotnet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Engines\IDbEngine.cs" />
@@ -77,6 +80,7 @@
     <Compile Include="Engines\LevelDbEngine.cs" />
     <Compile Include="Extensions\ObjectExtension.cs" />
     <Compile Include="Extensions\ValueTypeExtension.cs" />
+    <Compile Include="Engines\UpscaleDbEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -93,4 +97,5 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\LevelDB.Standard.2.1.6.1\build\net4\LevelDB.Standard.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LevelDB.Standard.2.1.6.1\build\net4\LevelDB.Standard.targets'))" />
   </Target>
+  <Import Project="..\packages\UpscaleDb-DotNet.2.2.0\build\upscaledb-dotnet.targets" Condition="Exists('..\packages\UpscaleDb-DotNet.2.2.0\build\upscaledb-dotnet.targets')" />
 </Project>

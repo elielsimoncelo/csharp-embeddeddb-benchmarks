@@ -6,17 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Csharp.Embedded.Db.Benchmark.Extensions;
 using Csharp.Embedded.Db.Benchmark.Models;
-using LiteDB;
+using Upscaledb;
 
 namespace Csharp.Embedded.Db.Benchmark.Engines
 {
-    internal class LiteDbEngine : IDbEngine<LargeModel>
-    {
-        private readonly List<Action<LiteCollection<BsonDocument>>> _actions;
+    internal class UpscaleDbEngine : IDbEngine<LargeModel>
+    { 
+        private readonly List<Action<Database>> _actions;
 
-        public LiteDbEngine()
+        public UpscaleDbEngine()
         {
-            _actions = new List<Action<LiteCollection<BsonDocument>>>();
+            _actions = new List<Action<Database>>();
             Log = new StringBuilder();
         }
 
@@ -42,9 +42,10 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
                 Parallel.For(0, RecordCount, item =>
                 {
                     var model = LargeModel.CreateInstance(item);
+                    var key = item.ToBinary();
                     var value = model.Serialize();
 
-                    db.Upsert(new BsonDocument { ["_id"] = item, ["value"] = value });
+                    db.Insert(key, value);
                 });
 
                 stopWatch.Stop();
@@ -68,9 +69,10 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
 
                 var item = 2000001L;
                 var model = LargeModel.CreateInstance(item);
+                var key = item.ToBinary();
                 var value = model.Serialize();
 
-                db.Upsert(new BsonDocument { ["_id"] = item, ["value"] = value });
+                db.Insert(key, value);
 
                 stopWatch.Stop();
 
@@ -93,8 +95,8 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
 
                 Parallel.For(0, RecordCount, item =>
                 {
-                    var document = db.FindById(item);
-                    var value = document["value"].AsBinary;
+                    var key = item.ToBinary();
+                    var value = db.Find(key);
                     var model = value.Deserialize<LargeModel>();
 
                     if (model == null)
@@ -122,9 +124,8 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
                 var stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-                var item = 2000001L;
-                var document = db.FindById(item);
-                var value = document["value"].AsBinary;
+                var key = 2000001L.ToBinary();
+                var value = db.Find(key);
                 var model = value.Deserialize<LargeModel>();
 
                 Log.AppendFormat($"     -> {model.ToString()}\n");
@@ -150,26 +151,27 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
 
             var databaseName = $@"{context.Replace(" ", "_").ToLower()}_{engine.ToLower()}.db";
 
-            if (File.Exists(databaseName))
-                File.Delete(databaseName);
+            if (Directory.Exists(databaseName))
+                Directory.Delete(databaseName, true);
 
-            var db = new LiteDatabase(new ConnectionString
-            {
-                Flush = false,
-                Journal = false,
-                CacheSize = 50000,
-                Mode = LiteDB.FileMode.Shared,
-                Filename = Path.Combine(Environment.CurrentDirectory, databaseName)
-            });
-            var collection = db.GetCollection(engine);
+            var databasePath = Path.Combine(System.Environment.CurrentDirectory, databaseName);
+
+            var environment = new Upscaledb.Environment();
+            var db = new Database();
+
+            environment.Create(databaseName);
+            db = environment.CreateDatabase(1);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            _actions.ForEach(action => action(collection));
+            _actions.ForEach(action => action(db));
 
             stopWatch.Stop();
-            db.Dispose();
+
+            environment.Flush();
+            environment.Close();
+            db.Close();
 
             Log.AppendFormat("# Context: {0} | Engine: {1} | Total time: {2:hh\\:mm\\:ss\\.ffff}\n", Context, engine, stopWatch.Elapsed);
             Log.AppendLine("\n");

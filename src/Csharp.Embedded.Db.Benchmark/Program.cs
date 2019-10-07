@@ -14,6 +14,7 @@ namespace Csharp.Embedded.Db.Benchmark
 
         private static readonly List<IDbEngine<LargeModel>> _dbEngines = new List<IDbEngine<LargeModel>>
         {
+            new UpscaleDbEngine(),
             new LevelDbEngine(),
             new LiteDbEngine()
         };

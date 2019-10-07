@@ -101,7 +101,7 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
 
                     if (model == null)
                     {
-                        lock (Log) { Log.AppendLine($"           -> Null item {item}"); }
+                        lock (Log) { Log.AppendLine($"      -> Null item {item}"); }
                     }
                 });
 
@@ -154,13 +154,14 @@ namespace Csharp.Embedded.Db.Benchmark.Engines
             if (Directory.Exists(databaseName))
                 Directory.Delete(databaseName, true);
 
-            var stopWatch = new Stopwatch();
             var db = new DB(new Options { CreateIfMissing = true }, databaseName);
 
+            var stopWatch = new Stopwatch();
             stopWatch.Start();
-            _actions.ForEach(action => action(db));
-            stopWatch.Stop();
 
+            _actions.ForEach(action => action(db));
+
+            stopWatch.Stop();
             db.Close();
 
             Log.AppendFormat("# Context: {0} | Engine: {1} | Total time: {2:hh\\:mm\\:ss\\.ffff}\n", Context, engine, stopWatch.Elapsed);
