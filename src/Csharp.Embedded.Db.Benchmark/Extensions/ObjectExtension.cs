@@ -11,7 +11,7 @@ namespace Csharp.Embedded.Db.Benchmark.Extensions
 
         public static byte[] Serialize<T>(this T obj)
         {
-            return obj == default ? new byte[] { } : ZeroFormatterSerializer.Serialize(obj);
+            return obj.Equals(default(T)) ? new byte[] { } : ZeroFormatterSerializer.Serialize(obj);
         }
 
         public static T Deserialize<T>(this byte[] content)
